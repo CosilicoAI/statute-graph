@@ -20,13 +20,43 @@ def cli():
 @click.argument("xml_path", type=click.Path(exists=True, path_type=Path))
 @click.option("-o", "--output", type=click.Path(path_type=Path), help="Output file path")
 @click.option("--format", "fmt", type=click.Choice(["json", "csv"]), default="json", help="Output format")
-def sequence(xml_path: Path, output: Path | None, fmt: str):
+@click.option("--prefix", help="Filter to sections matching prefix (e.g., '26/32' for all §32 subsections)")
+@click.option("--sections", help="Filter to section range (e.g., '1-1400' for Subtitle A income taxes)")
+def sequence(xml_path: Path, output: Path | None, fmt: str, prefix: str | None, sections: str | None):
     """Generate optimal encoding sequence from USC XML.
 
     XML_PATH is the path to a US Code XML file (USLM format).
+
+    Use --sections to compute optimal order for a section range:
+      --sections 1-1400     # Subtitle A (Income Taxes)
+      --sections 31-37      # Refundable credits
+      --sections 401-420    # Pensions
+
+    Use --prefix to filter by citation path prefix:
+      --prefix 26/32        # All §32 subsections
+
+    These filters recompute the topological sort on the induced subgraph,
+    which may differ from just filtering the full sequence.
     """
     click.echo(f"Loading {xml_path}...", err=True)
     graph = from_xml(xml_path)
+
+    sections_range = None
+    if sections:
+        try:
+            start, end = sections.split("-")
+            sections_range = (int(start), int(end))
+        except ValueError:
+            raise click.BadParameter("sections must be in format 'start-end' (e.g., '1-1400')")
+
+    if prefix or sections_range:
+        graph = graph.subgraph(prefix=prefix, sections=sections_range)
+        filter_desc = []
+        if prefix:
+            filter_desc.append(f"prefix '{prefix}'")
+        if sections_range:
+            filter_desc.append(f"§§{sections_range[0]}-{sections_range[1]}")
+        click.echo(f"Filtered to {graph.num_nodes} sections ({', '.join(filter_desc)})", err=True)
 
     click.echo(f"Computing encoding sequence for {graph.num_nodes} sections...", err=True)
     seq = graph.get_encoding_sequence()

@@ -49,6 +49,18 @@ class TestSequenceCommand:
         assert "citation_path" in content
         assert "order" in content
 
+    def test_sequence_section_filter(self, runner, tmp_path, sample_xml):
+        """Sequence command filters by section range."""
+        output = tmp_path / "sequence.json"
+        result = runner.invoke(cli, ["sequence", str(sample_xml), "-o", str(output), "--sections", "1-10"])
+        assert result.exit_code == 0
+        data = json.loads(output.read_text())
+        # Should only include §1 and §2 from sample (§32 is outside range)
+        sections = [d["section"] for d in data]
+        assert "1" in sections
+        assert "2" in sections
+        assert "32" not in sections
+
 
 class TestStatsCommand:
     """Tests for the 'stats' command."""

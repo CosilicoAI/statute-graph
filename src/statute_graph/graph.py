@@ -43,6 +43,72 @@ class StatuteGraph:
         """Graph density (edges / possible edges)."""
         return nx.density(self._graph)
 
+    def subgraph(
+        self, prefix: str | None = None, sections: tuple[int, int] | None = None
+    ) -> "StatuteGraph":
+        """Create an induced subgraph of matching nodes.
+
+        Args:
+            prefix: Citation path prefix to match (e.g., 'us/statute/26/1')
+            sections: Tuple (min, max) of section numbers to include (e.g., (1, 1400)
+                      for individual income taxes). Matches top-level sections only.
+
+        Returns:
+            New StatuteGraph containing only matching nodes and edges between them.
+            The encoding sequence for this subgraph is optimal for encoding just
+            this subset, accounting for the induced dependency structure.
+
+        Examples:
+            # Filter to §§1-1400 (Subtitle A - Income Taxes)
+            g.subgraph(sections=(1, 1400))
+
+            # Filter to EITC and related (§§31-37)
+            g.subgraph(sections=(31, 37))
+
+            # Filter to all §32 subsections
+            g.subgraph(prefix="26/32")
+        """
+        import re
+
+        def get_section_num(path: str) -> int | None:
+            """Extract top-level section number from path."""
+            # Match patterns like us/statute/26/32 or us/statute/26/32/a/1
+            match = re.match(r".*/(\d+[A-Z]?)(?:/|$)", path)
+            if match:
+                sec = match.group(1)
+                # Handle sections like "32", "401", "7701A"
+                num_part = "".join(c for c in sec if c.isdigit())
+                return int(num_part) if num_part else None
+            return None
+
+        matching_nodes = []
+
+        for node in self._graph.nodes():
+            # Check prefix match
+            if prefix:
+                normalized = prefix if prefix.startswith("us/") else f"us/statute/{prefix}"
+                if not node.startswith(normalized):
+                    continue
+
+            # Check section range
+            if sections:
+                sec_num = get_section_num(node)
+                if sec_num is None or not (sections[0] <= sec_num <= sections[1]):
+                    continue
+
+            matching_nodes.append(node)
+
+        new_graph = StatuteGraph()
+        subgraph = self._graph.subgraph(matching_nodes)
+
+        for node in subgraph.nodes():
+            new_graph.add_node(node, **self._graph.nodes[node])
+
+        for u, v, data in subgraph.edges(data=True):
+            new_graph.add_edge(u, v, **data)
+
+        return new_graph
+
     def add_node(self, citation_path: str, **attrs: Any) -> None:
         """Add a statute section node.
 
@@ -228,8 +294,11 @@ class StatuteGraph:
         """Number of strongly connected components."""
         return nx.number_strongly_connected_components(self._graph)
 
-    def subgraph(self, nodes: list[str]) -> "StatuteGraph":
-        """Create a subgraph containing only the specified nodes."""
+    def subgraph_from_nodes(self, nodes: list[str]) -> "StatuteGraph":
+        """Create a subgraph containing only the specified nodes.
+
+        For filtering by prefix or section range, use subgraph() instead.
+        """
         sg = StatuteGraph()
         sg._graph = self._graph.subgraph(nodes).copy()
         sg._encoded = self._encoded.intersection(nodes)

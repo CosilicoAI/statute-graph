@@ -163,6 +163,61 @@ class TestEncodingOrder:
         assert progress["ready"] == 2  # Now A and C are ready
 
 
+class TestSubgraph:
+    """Tests for subgraph extraction."""
+
+    def test_subgraph_filters_nodes(self):
+        """Subgraph only includes nodes matching prefix."""
+        g = StatuteGraph()
+        g.add_node("us/statute/26/1")
+        g.add_node("us/statute/26/2")
+        g.add_node("us/statute/26/A/32")
+        g.add_node("us/statute/26/A/24")
+        g.add_node("us/statute/26/B/100")
+
+        sub = g.subgraph("26/A")
+        assert sub.num_nodes == 2
+        assert "us/statute/26/A/32" in sub
+        assert "us/statute/26/A/24" in sub
+        assert "us/statute/26/1" not in sub
+
+    def test_subgraph_includes_internal_edges(self):
+        """Subgraph keeps edges between included nodes."""
+        g = StatuteGraph()
+        g.add_node("us/statute/26/A/32")
+        g.add_node("us/statute/26/A/24")
+        g.add_node("us/statute/26/1")
+        g.add_edge("us/statute/26/A/32", "us/statute/26/A/24")  # internal
+        g.add_edge("us/statute/26/A/32", "us/statute/26/1")  # external
+
+        sub = g.subgraph("26/A")
+        assert sub.num_edges == 1  # only internal edge
+        assert "us/statute/26/A/24" in sub.get_dependencies("us/statute/26/A/32")
+
+    def test_subgraph_sequence_differs_from_filtered(self):
+        """Subgraph encoding sequence may differ from filtering full sequence."""
+        g = StatuteGraph()
+        # Create structure where order depends on external deps
+        g.add_node("us/statute/26/A/1")
+        g.add_node("us/statute/26/A/2")
+        g.add_node("us/statute/26/B/100")  # external
+        g.add_edge("us/statute/26/A/1", "us/statute/26/B/100")  # A/1 deps on external
+        g.add_edge("us/statute/26/A/2", "us/statute/26/A/1")  # A/2 deps on A/1
+
+        # Full sequence: B/100 -> A/1 -> A/2
+        full_seq = g.get_encoding_sequence()
+        full_order = [s["citation_path"] for s in full_seq]
+        assert full_order.index("us/statute/26/A/1") < full_order.index("us/statute/26/A/2")
+
+        # Subgraph: without B/100, A/1 has 0 deps so may come in different position
+        sub = g.subgraph("26/A")
+        sub_seq = sub.get_encoding_sequence()
+        assert len(sub_seq) == 2
+        # A/1 now has 0 deps in subgraph (external dep removed)
+        a1_item = next(s for s in sub_seq if s["citation_path"] == "us/statute/26/A/1")
+        assert a1_item["dependencies"] == 0
+
+
 class TestGraphMetrics:
     """Test graph complexity metrics."""
 
