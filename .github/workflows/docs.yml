@@ -6,18 +6,16 @@ on:
   pull_request:
     branches: [main]
 
-permissions:
-  contents: read
-  pages: write
-  id-token: write
-
-concurrency:
-  group: "pages"
-  cancel-in-progress: false
-
 jobs:
-  build:
+  docs:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
 
@@ -31,15 +29,19 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Install package
-        run: pip install -e ".[xml]"
-
-      - name: Install MyST
-        run: npm install -g mystmd
+      - name: Install dependencies
+        run: |
+          pip install -e ".[xml]"
+          npm install -g mystmd
 
       - name: Build docs
-        working-directory: paper
-        run: myst build --html
+        run: |
+          cd paper
+          BASE_URL="/statute-graph/" myst build --html
+
+      - name: Setup Pages
+        if: github.ref == 'refs/heads/main'
+        uses: actions/configure-pages@v4
 
       - name: Upload artifact
         if: github.ref == 'refs/heads/main'
@@ -47,14 +49,7 @@ jobs:
         with:
           path: paper/_build/html
 
-  deploy:
-    if: github.ref == 'refs/heads/main'
-    needs: build
-    runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
       - name: Deploy to GitHub Pages
+        if: github.ref == 'refs/heads/main'
         id: deployment
         uses: actions/deploy-pages@v4
