@@ -227,7 +227,8 @@
         <tr>
           <th data-sort="order">Order</th>
           <th data-sort="section">Section</th>
-          <th data-sort="dependencies">Dependencies</th>
+          <th data-sort="heading">Title</th>
+          <th data-sort="dependencies">Deps</th>
           <th data-sort="dependents">Dependents</th>
           <th data-sort="scc_size">Status</th>
         </tr>
@@ -341,10 +342,11 @@
             <td>
               <a class="section-link" href="${uscUrl}" target="_blank">§${d.section}</a>
             </td>
+            <td style="max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${d.heading || ''}">${d.heading || '—'}</td>
             <td>
               <div style="display: flex; align-items: center; gap: 0.5rem;">
                 <span style="min-width: 2rem;">${d.dependencies}</span>
-                <div class="bar" style="flex: 1; max-width: 100px;">
+                <div class="bar" style="flex: 1; max-width: 60px;">
                   <div class="bar-fill bar-deps" style="width: ${(d.dependencies / maxDeps) * 100}%"></div>
                 </div>
               </div>
@@ -352,7 +354,7 @@
             <td>
               <div style="display: flex; align-items: center; gap: 0.5rem;">
                 <span style="min-width: 2rem;">${d.dependents}</span>
-                <div class="bar" style="flex: 1; max-width: 100px;">
+                <div class="bar" style="flex: 1; max-width: 60px;">
                   <div class="bar-fill bar-dependents" style="width: ${(d.dependents / maxDependents) * 100}%"></div>
                 </div>
               </div>
@@ -409,8 +411,12 @@
     }
 
     function downloadCSV() {
-      const headers = ['order', 'section', 'citation_path', 'dependencies', 'dependents', 'scc_size'];
-      const rows = filteredData.map(d => headers.map(h => d[h]).join(','));
+      const headers = ['order', 'section', 'heading', 'citation_path', 'dependencies', 'dependents', 'scc_size'];
+      const rows = filteredData.map(d => headers.map(h => {
+        const val = d[h] || '';
+        // Escape quotes and wrap in quotes if contains comma
+        return val.toString().includes(',') ? `"${val.replace(/"/g, '""')}"` : val;
+      }).join(','));
       const csv = [headers.join(','), ...rows].join('\n');
 
       const blob = new Blob([csv], { type: 'text/csv' });

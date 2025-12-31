@@ -169,6 +169,9 @@ def generate(xml_path: Path, output_dir: Path):
     seq = graph.get_encoding_sequence()
     for item in seq:
         item["section"] = item["citation_path"].split("/")[-1]
+        # Add heading from node data
+        node_data = graph._graph.nodes.get(item["citation_path"], {})
+        item["heading"] = node_data.get("heading", "").strip()
     seq_path = data_dir / "encoding_sequence.json"
     seq_path.write_text(json.dumps(seq, indent=2))
     click.echo(f"Wrote {seq_path}", err=True)

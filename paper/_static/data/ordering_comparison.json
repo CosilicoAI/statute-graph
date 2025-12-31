@@ -1,9 +1,9 @@
 {
   "Optimal (topological)": {
-    "total_forward_refs": 1920,
+    "total_forward_refs": 1917,
     "max_blocked": 90,
-    "avg_blocked": 0.7843137254901961,
-    "pct_zero_blocked": 81.37254901960785
+    "avg_blocked": 0.7830882352941176,
+    "pct_zero_blocked": 81.20915032679738
   },
   "Numerical (\u00a71, \u00a72, ...)": {
     "total_forward_refs": 2490,
@@ -18,9 +18,9 @@
     "pct_zero_blocked": 49.877450980392155
   },
   "Reverse optimal": {
-    "total_forward_refs": 6586,
+    "total_forward_refs": 6589,
     "max_blocked": 39,
-    "avg_blocked": 2.690359477124183,
-    "pct_zero_blocked": 31.086601307189543
+    "avg_blocked": 2.6915849673202614,
+    "pct_zero_blocked": 31.16830065359477
   }
 }
