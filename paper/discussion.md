@@ -32,7 +32,7 @@ The optimal sequence we derive enables:
 
 1. **Cross-title references**: We focus on Title 26 internal references. Cross-references to other titles (e.g., Title 42 Social Security Act) are noted but not fully resolved.
 
-2. **Temporal dynamics**: Tax law changes frequently. Our snapshot represents the code as of December 2025.
+2. **Temporal dynamics**: Tax law changes frequently. Our snapshot represents the code as of December 2025 {cite:p}`uscode2025`.
 
 3. **Semantic depth**: Not all cross-references are equally important. A definitional reference may be more critical than a cross-reference for administrative purposes.
 
@@ -41,7 +41,7 @@ The optimal sequence we derive enables:
 1. **Multi-title analysis**: Extend to all 54 titles of the US Code
 2. **Temporal evolution**: Track how the dependency graph changes over time
 3. **Weighted edges**: Assign importance weights to different reference types
-4. **Visualization**: Interactive graph exploration tools
+4. **Graph neural networks**: Apply techniques from {cite:t}`casegnn2024` for legal case retrieval
 
 ## Conclusion
 

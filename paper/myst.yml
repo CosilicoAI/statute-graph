@@ -1,0 +1,34 @@
+version: 1
+project:
+  title: "Optimal Encoding Sequence for Statutory Cross-References"
+  description: "Graph-theoretic analysis of US Code cross-references for computable law"
+  authors:
+    - name: Cosilico
+      email: team@cosilico.ai
+  github: https://github.com/CosilicoAI/statute-graph
+  license: MIT
+  keywords:
+    - legal informatics
+    - graph theory
+    - statutory analysis
+    - computable law
+    - topological sort
+  exports:
+    - format: pdf
+      template: plain_latex
+      output: exports/statute-graph.pdf
+  bibliography:
+    - references.bib
+  toc:
+    - file: index.md
+    - file: methods.md
+    - file: results.md
+    - file: discussion.md
+
+site:
+  template: book-theme
+  title: Statute Graph
+  options:
+    logo_text: Cosilico
+    logo_url: https://cosilico.ai
+    hide_outline: true

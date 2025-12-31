@@ -1,7 +1,0 @@
-format: jb-book
-root: index
-chapters:
-  - file: introduction
-  - file: methods
-  - file: results
-  - file: discussion
