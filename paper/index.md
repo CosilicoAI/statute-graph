@@ -6,7 +6,7 @@ team@cosilico.ai
 
 ## Abstract
 
-Tax statutes form a complex web of cross-references. Section 32 (Earned Income Tax Credit) references section 151 (dependency exemption), which references section 152 (definition of dependent), creating chains of dependencies that complicate efforts to encode law into executable rules. We model the US Internal Revenue Code as a directed graph where nodes represent statute sections and edges represent cross-references. Using strongly connected component (SCC) decomposition and topological sorting, we derive an optimal encoding sequence that minimizes blocked dependencies. Our analysis of Title 26 reveals 2,448 sections connected by 16,936 cross-references, with Section 1 (tax rates) serving as the primary hub referenced by 563 other sections. We identify 1,444 strongly connected components representing circular reference patterns, and provide an algorithm for resolving these cycles. The resulting encoding sequence enables systematic translation of statutory law into computable rules.
+Tax statutes form a complex web of cross-references. Section 32 (Earned Income Tax Credit) references section 151 (dependency exemption), which references section 152 (definition of dependent), creating chains of dependencies that complicate efforts to encode law into executable rules. We model the US Internal Revenue Code as a directed graph where nodes represent statute sections and edges represent cross-references. Using strongly connected component (SCC) decomposition and topological sorting, we derive an optimal encoding sequence that minimizes blocked dependencies. Our analysis of Title 26 reveals 2,448 sections connected by 8,458 cross-references, with Section 1 (tax rates) serving as the primary hub referenced by 563 other sections. We identify 1,444 strongly connected components, with 40 multi-node components representing circular reference patterns, and provide an algorithm for resolving these cycles. The resulting encoding sequence enables systematic translation of statutory law into computable rules.
 
 **Keywords:** legal informatics, graph theory, statutory analysis, computable law, topological sort
 
@@ -108,12 +108,12 @@ Our analysis of Title 26 (Internal Revenue Code) yields:
 | Metric | Value |
 |--------|-------|
 | Sections (nodes) | 2,448 |
-| Cross-references (edges) | 16,936 |
-| Graph density | 0.0028 |
-| Average dependencies per section | 6.9 |
+| Cross-references (edges) | 8,458 |
+| Graph density | 0.0014 |
+| Average dependencies per section | 3.5 |
 | Strongly connected components | 1,444 |
 
-The low density (0.28%) indicates that despite extensive cross-referencing, most section pairs are not directly connected. The average section depends on approximately 7 other sections.
+The low density (0.14%) indicates that despite extensive cross-referencing, most section pairs are not directly connected. The average section depends on approximately 3-4 other sections.
 
 ### Hub Sections
 
@@ -131,7 +131,7 @@ Section 1 (tax rates) is the most-referenced section, with 563 other sections de
 - **Section 401** (qualified pension plans): 238 dependents
 - **Section 2** (tax tables): 170 dependents
 - **Section 48** (energy credits): 168 dependents
-- **Section 152** (dependent definition): 156 dependents
+- **Section 23** (adoption credit): 130 dependents
 
 ### Circular Reference Patterns
 
@@ -142,7 +142,7 @@ Section 1 (tax rates) is the most-referenced section, with 563 other sections de
 **Figure 4: Distribution of Strongly Connected Components.** Left: Most SCCs contain a single section (no cycles). Right: 97% of sections have no circular references; 3% are involved in mutual reference patterns requiring special handling.
 ```
 
-We identified 1,444 strongly connected components. The majority (1,400+) are trivial single-node SCCs, indicating no circular dependencies. However, 44 multi-node SCCs represent genuine mutual dependencies.
+We identified 1,444 strongly connected components. The majority (1,400+) are trivial single-node SCCs, indicating no circular dependencies. However, 40 multi-node SCCs represent genuine mutual dependencies.
 
 For example, sections defining income may reference sections defining deductions, which in turn reference income definitions. Such cycles are inherent to the structure of tax law and cannot be eliminated through reordering alone.
 
@@ -155,7 +155,7 @@ For example, sections defining income may reference sections defining deductions
 **Figure 5: Dependency Distributions.** Left: Number of dependencies (in-degree) per section—most sections depend on 0-10 others. Right: Number of dependents (out-degree) per section—follows a power-law distribution with a long tail of highly-referenced hub sections.
 ```
 
-The in-degree distribution (dependencies) is roughly exponential: most sections depend on few others, with a mean of 6.9. The out-degree distribution (dependents) shows a power-law tail characteristic of scale-free networks, with a few hub sections referenced by hundreds of others.
+The in-degree distribution (dependencies) is roughly exponential: most sections depend on few others, with a mean of 3.5. The out-degree distribution (dependents) shows a power-law tail characteristic of scale-free networks, with a few hub sections referenced by hundreds of others.
 
 ### Encoding Sequence
 

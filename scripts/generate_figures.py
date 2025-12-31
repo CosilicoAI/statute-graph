@@ -179,8 +179,9 @@ def fig4_degree_distribution():
 
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10, 4))
 
-    # In-degree (dependencies)
-    ax1.hist(in_degrees, bins=50, color=COLORS['primary'], edgecolor='white', alpha=0.8)
+    # In-degree (dependencies) - use integer-aligned bins
+    max_in = max(in_degrees)
+    ax1.hist(in_degrees, bins=range(0, max_in + 2), color=COLORS['primary'], edgecolor='white', alpha=0.8)
     ax1.axvline(np.mean(in_degrees), color=COLORS['accent'], linestyle='--',
                 label=f'Mean: {np.mean(in_degrees):.1f}')
     ax1.set_xlabel('Number of Dependencies (in-degree)', fontsize=10)
@@ -190,8 +191,9 @@ def fig4_degree_distribution():
     ax1.spines['top'].set_visible(False)
     ax1.spines['right'].set_visible(False)
 
-    # Out-degree (dependents)
-    ax2.hist(out_degrees, bins=50, color=COLORS['secondary'], edgecolor='white', alpha=0.8)
+    # Out-degree (dependents) - use integer-aligned bins
+    max_out = max(out_degrees)
+    ax2.hist(out_degrees, bins=range(0, max_out + 2), color=COLORS['secondary'], edgecolor='white', alpha=0.8)
     ax2.axvline(np.mean(out_degrees), color=COLORS['accent'], linestyle='--',
                 label=f'Mean: {np.mean(out_degrees):.1f}')
     ax2.set_xlabel('Number of Dependents (out-degree)', fontsize=10)
