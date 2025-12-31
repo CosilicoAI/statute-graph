@@ -33,6 +33,10 @@ dev = [
 xml = [
     "lxml>=4.9",
 ]
+paper = [
+    "jupyter-book>=1.0",
+    "sphinx-proof",
+]
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/statute_graph"]

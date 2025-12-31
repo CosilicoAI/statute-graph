@@ -81,18 +81,80 @@ class StatuteGraph:
         """Number of dependents (incoming edges in our semantics)."""
         return self._graph.in_degree(node)
 
-    def topological_sort(self) -> list[str]:
+    def topological_sort(self, allow_cycles: bool = False) -> list[str]:
         """Return nodes in dependency order (dependencies before dependents).
 
+        Args:
+            allow_cycles: If True, condense SCCs and return valid order.
+                         If False, raise ValueError on cycles.
+
         Raises:
-            ValueError: If the graph contains cycles.
+            ValueError: If the graph contains cycles and allow_cycles=False.
         """
         try:
             # Reverse because we want dependencies first
             return list(reversed(list(nx.topological_sort(self._graph))))
         except nx.NetworkXUnfeasible:
-            cycles = list(nx.simple_cycles(self._graph))
-            raise ValueError(f"Graph contains cycle(s): {cycles[:3]}...")
+            if not allow_cycles:
+                cycles = list(nx.simple_cycles(self._graph))
+                raise ValueError(f"Graph contains cycle(s): {cycles[:3]}...")
+            # Condense SCCs and sort
+            return self._topological_sort_with_cycles()
+
+    def _topological_sort_with_cycles(self) -> list[str]:
+        """Topological sort that handles cycles by condensing SCCs."""
+        # Get strongly connected components
+        sccs = list(nx.strongly_connected_components(self._graph))
+
+        # Build condensation graph (each SCC becomes a node)
+        condensation = nx.condensation(self._graph, scc=sccs)
+
+        # Topological sort the DAG of SCCs
+        scc_order = list(reversed(list(nx.topological_sort(condensation))))
+
+        # Flatten: for each SCC in order, add its nodes
+        result = []
+        for scc_id in scc_order:
+            scc_nodes = list(sccs[scc_id])
+            # Sort nodes within SCC by out-degree (encode hubs first)
+            scc_nodes.sort(key=lambda n: self.out_degree(n), reverse=True)
+            result.extend(scc_nodes)
+
+        return result
+
+    def get_sccs(self) -> list[set[str]]:
+        """Get strongly connected components (circular reference groups)."""
+        return [scc for scc in nx.strongly_connected_components(self._graph)]
+
+    def get_encoding_sequence(self) -> list[dict]:
+        """Get optimal encoding sequence with metadata.
+
+        Returns list of dicts with:
+        - citation_path: The section to encode
+        - order: Position in sequence (1-indexed)
+        - scc_size: Size of its SCC (1 = no cycles)
+        - dependencies: Number of dependencies
+        - dependents: Number of dependents
+        """
+        order = self.topological_sort(allow_cycles=True)
+
+        # Build SCC lookup
+        scc_lookup = {}
+        for scc in self.get_sccs():
+            for node in scc:
+                scc_lookup[node] = len(scc)
+
+        result = []
+        for i, node in enumerate(order):
+            result.append({
+                "citation_path": node,
+                "order": i + 1,
+                "scc_size": scc_lookup.get(node, 1),
+                "dependencies": self.in_degree(node),
+                "dependents": self.out_degree(node),
+            })
+
+        return result
 
     def get_ready_nodes(self) -> list[str]:
         """Get nodes that are ready to encode (all dependencies encoded)."""
