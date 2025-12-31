@@ -28,6 +28,7 @@ project:
 site:
   template: book-theme
   title: Statute Graph
+  base_url: /statute-graph
   options:
     logo_text: Cosilico
     logo_url: https://cosilico.ai
