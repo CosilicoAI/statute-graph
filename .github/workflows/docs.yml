@@ -38,6 +38,8 @@ jobs:
         run: |
           cd paper
           BASE_URL="/statute-graph/" myst build --html
+          # Copy static files (explorer, data) that MyST doesn't auto-copy
+          cp -r _static/* _build/html/ 2>/dev/null || true
 
       - name: Setup Pages
         if: github.ref == 'refs/heads/main'
