@@ -21,9 +21,6 @@ project:
     - references.bib
   toc:
     - file: index.md
-    - file: methods.md
-    - file: results.md
-    - file: discussion.md
 
 site:
   template: book-theme
@@ -31,4 +28,4 @@ site:
   options:
     logo_text: Cosilico
     logo_url: https://cosilico.ai
-    hide_outline: true
+    hide_outline: false
