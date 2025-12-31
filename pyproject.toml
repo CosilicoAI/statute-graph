@@ -23,7 +23,11 @@ dependencies = [
     "networkx>=3.0",
     "matplotlib>=3.7",
     "pandas>=2.0",
+    "click>=8.0",
 ]
+
+[project.scripts]
+statute-graph = "statute_graph.cli:cli"
 
 [project.optional-dependencies]
 dev = [

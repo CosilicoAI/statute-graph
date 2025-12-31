@@ -290,6 +290,94 @@ def fig5_network_sample():
     print(f"Saved {OUTPUT_DIR / 'network_sample.png'}")
 
 
+def fig6_ordering_comparison():
+    """Figure 6: Compare encoding orderings by forward reference count."""
+    import random
+
+    if not USE_REAL_DATA:
+        print("Skipping ordering comparison (requires real data)")
+        return
+
+    def calculate_forward_refs(order):
+        """Count forward references for an ordering."""
+        encoded = set()
+        forward_refs = []
+        cumulative = 0
+
+        for node in order:
+            deps = set(g._graph.successors(node))
+            unmet = len(deps - encoded)
+            cumulative += unmet
+            forward_refs.append(cumulative)
+            encoded.add(node)
+
+        return forward_refs
+
+    # Get orderings
+    optimal = g.topological_sort(allow_cycles=True)
+    nodes = list(g._graph.nodes())
+
+    # Numerical order
+    def section_num(path):
+        sec = path.split('/')[-1]
+        num = ''.join(c for c in sec if c.isdigit())
+        return int(num) if num else float('inf')
+    numerical = sorted(nodes, key=section_num)
+
+    # Random
+    random.seed(42)
+    random_order = nodes.copy()
+    random.shuffle(random_order)
+
+    # Calculate cumulative forward refs
+    opt_refs = calculate_forward_refs(optimal)
+    num_refs = calculate_forward_refs(numerical)
+    rand_refs = calculate_forward_refs(random_order)
+
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(11, 4))
+
+    # Left: Cumulative forward references
+    x = np.arange(len(optimal))
+    ax1.plot(x, opt_refs, color=COLORS['secondary'], label='Optimal (topological)', linewidth=2)
+    ax1.plot(x, num_refs, color=COLORS['primary'], label='Numerical (§1, §2, ...)', linewidth=1.5, alpha=0.8)
+    ax1.plot(x, rand_refs, color=COLORS['gray'], label='Random', linewidth=1.5, alpha=0.8)
+    ax1.set_xlabel('Sections Encoded', fontsize=10)
+    ax1.set_ylabel('Cumulative Forward References', fontsize=10)
+    ax1.set_title('Forward References During Encoding', fontsize=11, fontweight='bold')
+    ax1.legend(fontsize=8)
+    ax1.spines['top'].set_visible(False)
+    ax1.spines['right'].set_visible(False)
+
+    # Right: Bar chart of totals
+    orderings = ['Optimal', 'Numerical', 'Random', 'Reverse\nOptimal']
+    totals = [opt_refs[-1], num_refs[-1], rand_refs[-1],
+              calculate_forward_refs(list(reversed(optimal)))[-1]]
+    colors = [COLORS['secondary'], COLORS['primary'], COLORS['gray'], COLORS['accent']]
+
+    bars = ax2.bar(orderings, totals, color=colors, edgecolor='white')
+    ax2.set_ylabel('Total Forward References', fontsize=10)
+    ax2.set_title('Encoding Order Comparison', fontsize=11, fontweight='bold')
+    ax2.spines['top'].set_visible(False)
+    ax2.spines['right'].set_visible(False)
+
+    # Add value labels
+    for bar, total in zip(bars, totals):
+        ax2.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 100,
+                f'{total:,}', ha='center', fontsize=9, color=COLORS['gray'])
+
+    # Add improvement annotation
+    improvement = (1 - opt_refs[-1] / totals[-1]) * 100
+    ax2.annotate(f'{improvement:.0f}% reduction\nvs worst case',
+                xy=(0, opt_refs[-1]), xytext=(1.5, opt_refs[-1] + 1500),
+                fontsize=9, color=COLORS['secondary'],
+                arrowprops=dict(arrowstyle='->', color=COLORS['secondary'], lw=1.5))
+
+    plt.tight_layout()
+    plt.savefig(OUTPUT_DIR / 'ordering_comparison.png', dpi=150, bbox_inches='tight')
+    plt.close()
+    print(f"Saved {OUTPUT_DIR / 'ordering_comparison.png'}")
+
+
 if __name__ == '__main__':
     print(f"Using real data: {USE_REAL_DATA}")
     fig1_hub_sections()
@@ -297,4 +385,5 @@ if __name__ == '__main__':
     fig3_dependency_flow()
     fig4_degree_distribution()
     fig5_network_sample()
+    fig6_ordering_comparison()
     print("Done generating figures!")

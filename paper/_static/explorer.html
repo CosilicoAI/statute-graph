@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Encoding Sequence Explorer | Statute Graph</title>
+  <style>
+    :root {
+      --primary: #2563eb;
+      --secondary: #059669;
+      --accent: #dc2626;
+      --gray: #6b7280;
+      --bg: #f9fafb;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg);
+      color: #1f2937;
+      line-height: 1.6;
+    }
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    h1 {
+      font-size: 1.75rem;
+      margin-bottom: 0.5rem;
+      color: #111827;
+    }
+    .subtitle {
+      color: var(--gray);
+      margin-bottom: 2rem;
+    }
+    .controls {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+      margin-bottom: 1.5rem;
+    }
+    .search-box {
+      flex: 1;
+      min-width: 200px;
+    }
+    input, select {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      border: 1px solid #d1d5db;
+      border-radius: 0.5rem;
+      font-size: 1rem;
+      background: white;
+    }
+    input:focus, select:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    }
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+    .stat-card {
+      background: white;
+      padding: 1rem;
+      border-radius: 0.5rem;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    .stat-value {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--primary);
+    }
+    .stat-label {
+      font-size: 0.875rem;
+      color: var(--gray);
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: white;
+      border-radius: 0.5rem;
+      overflow: hidden;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    th, td {
+      padding: 0.75rem 1rem;
+      text-align: left;
+      border-bottom: 1px solid #e5e7eb;
+    }
+    th {
+      background: #f3f4f6;
+      font-weight: 600;
+      cursor: pointer;
+      user-select: none;
+    }
+    th:hover { background: #e5e7eb; }
+    th.sorted-asc::after { content: ' ▲'; }
+    th.sorted-desc::after { content: ' ▼'; }
+    tr:hover { background: #f9fafb; }
+    .section-link {
+      font-weight: 600;
+      color: var(--primary);
+      text-decoration: none;
+    }
+    .section-link:hover { text-decoration: underline; }
+    .badge {
+      display: inline-block;
+      padding: 0.25rem 0.5rem;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 500;
+    }
+    .badge-cycle {
+      background: #fef3c7;
+      color: #92400e;
+    }
+    .badge-hub {
+      background: #dbeafe;
+      color: #1e40af;
+    }
+    .badge-foundation {
+      background: #d1fae5;
+      color: #065f46;
+    }
+    .bar {
+      height: 8px;
+      background: #e5e7eb;
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    .bar-fill {
+      height: 100%;
+      border-radius: 4px;
+    }
+    .bar-deps { background: var(--primary); }
+    .bar-dependents { background: var(--secondary); }
+    .pagination {
+      display: flex;
+      justify-content: center;
+      gap: 0.5rem;
+      margin-top: 1.5rem;
+    }
+    .pagination button {
+      padding: 0.5rem 1rem;
+      border: 1px solid #d1d5db;
+      background: white;
+      border-radius: 0.375rem;
+      cursor: pointer;
+    }
+    .pagination button:hover { background: #f3f4f6; }
+    .pagination button:disabled { opacity: 0.5; cursor: not-allowed; }
+    .pagination button.active {
+      background: var(--primary);
+      color: white;
+      border-color: var(--primary);
+    }
+    .page-info {
+      color: var(--gray);
+      font-size: 0.875rem;
+      text-align: center;
+      margin-top: 0.5rem;
+    }
+    .filter-group {
+      display: flex;
+      gap: 0.5rem;
+    }
+    .filter-group label {
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+      padding: 0.5rem 0.75rem;
+      background: white;
+      border: 1px solid #d1d5db;
+      border-radius: 0.375rem;
+      cursor: pointer;
+      font-size: 0.875rem;
+    }
+    .filter-group input:checked + span {
+      color: var(--primary);
+      font-weight: 500;
+    }
+    .download-btn {
+      padding: 0.75rem 1.5rem;
+      background: var(--primary);
+      color: white;
+      border: none;
+      border-radius: 0.5rem;
+      cursor: pointer;
+      font-size: 0.875rem;
+      font-weight: 500;
+    }
+    .download-btn:hover { background: #1d4ed8; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Encoding Sequence Explorer</h1>
+    <p class="subtitle">Optimal order for encoding Title 26 (Internal Revenue Code) sections</p>
+
+    <div class="stats" id="stats"></div>
+
+    <div class="controls">
+      <div class="search-box">
+        <input type="text" id="search" placeholder="Search by section (e.g., 32, 401, 152)...">
+      </div>
+      <select id="sort">
+        <option value="order">Sort by Encoding Order</option>
+        <option value="section">Sort by Section Number</option>
+        <option value="dependencies">Sort by Dependencies</option>
+        <option value="dependents">Sort by Dependents</option>
+        <option value="scc_size">Sort by Cycle Size</option>
+      </select>
+      <select id="filter">
+        <option value="all">All Sections</option>
+        <option value="foundation">Foundation (0 deps)</option>
+        <option value="hubs">Hubs (50+ dependents)</option>
+        <option value="cycles">In Cycles (SCC > 1)</option>
+      </select>
+      <button class="download-btn" onclick="downloadCSV()">Download CSV</button>
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th data-sort="order">Order</th>
+          <th data-sort="section">Section</th>
+          <th data-sort="dependencies">Dependencies</th>
+          <th data-sort="dependents">Dependents</th>
+          <th data-sort="scc_size">Status</th>
+        </tr>
+      </thead>
+      <tbody id="table-body"></tbody>
+    </table>
+
+    <div class="pagination" id="pagination"></div>
+    <div class="page-info" id="page-info"></div>
+  </div>
+
+  <script>
+    let data = [];
+    let filteredData = [];
+    let currentPage = 1;
+    const pageSize = 50;
+    let sortColumn = 'order';
+    let sortDirection = 'asc';
+
+    async function loadData() {
+      const response = await fetch('data/encoding_sequence.json');
+      data = await response.json();
+      filteredData = [...data];
+      updateStats();
+      render();
+    }
+
+    function updateStats() {
+      const totalSections = data.length;
+      const foundations = data.filter(d => d.dependencies === 0).length;
+      const hubs = data.filter(d => d.dependents >= 50).length;
+      const inCycles = data.filter(d => d.scc_size > 1).length;
+
+      document.getElementById('stats').innerHTML = `
+        <div class="stat-card">
+          <div class="stat-value">${totalSections.toLocaleString()}</div>
+          <div class="stat-label">Total Sections</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">${foundations}</div>
+          <div class="stat-label">Foundations (0 deps)</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">${hubs}</div>
+          <div class="stat-label">Hubs (50+ dependents)</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">${inCycles}</div>
+          <div class="stat-label">In Cycles</div>
+        </div>
+      `;
+    }
+
+    function applyFilters() {
+      const search = document.getElementById('search').value.toLowerCase();
+      const filter = document.getElementById('filter').value;
+
+      filteredData = data.filter(d => {
+        if (search && !d.section.toLowerCase().includes(search)) return false;
+        if (filter === 'foundation' && d.dependencies !== 0) return false;
+        if (filter === 'hubs' && d.dependents < 50) return false;
+        if (filter === 'cycles' && d.scc_size <= 1) return false;
+        return true;
+      });
+
+      sortData();
+      currentPage = 1;
+      render();
+    }
+
+    function sortData() {
+      filteredData.sort((a, b) => {
+        let aVal = a[sortColumn];
+        let bVal = b[sortColumn];
+
+        if (sortColumn === 'section') {
+          // Numeric sort for section numbers where possible
+          const aNum = parseInt(aVal);
+          const bNum = parseInt(bVal);
+          if (!isNaN(aNum) && !isNaN(bNum)) {
+            aVal = aNum;
+            bVal = bNum;
+          }
+        }
+
+        if (aVal < bVal) return sortDirection === 'asc' ? -1 : 1;
+        if (aVal > bVal) return sortDirection === 'asc' ? 1 : -1;
+        return 0;
+      });
+    }
+
+    function render() {
+      const maxDeps = Math.max(...data.map(d => d.dependencies));
+      const maxDependents = Math.max(...data.map(d => d.dependents));
+
+      const start = (currentPage - 1) * pageSize;
+      const end = start + pageSize;
+      const pageData = filteredData.slice(start, end);
+
+      const tbody = document.getElementById('table-body');
+      tbody.innerHTML = pageData.map(d => {
+        const uscUrl = `https://www.law.cornell.edu/uscode/text/26/${d.section}`;
+        const badges = [];
+        if (d.dependencies === 0) badges.push('<span class="badge badge-foundation">Foundation</span>');
+        if (d.dependents >= 50) badges.push('<span class="badge badge-hub">Hub</span>');
+        if (d.scc_size > 1) badges.push(`<span class="badge badge-cycle">Cycle (${d.scc_size})</span>`);
+
+        return `
+          <tr>
+            <td>${d.order}</td>
+            <td>
+              <a class="section-link" href="${uscUrl}" target="_blank">§${d.section}</a>
+            </td>
+            <td>
+              <div style="display: flex; align-items: center; gap: 0.5rem;">
+                <span style="min-width: 2rem;">${d.dependencies}</span>
+                <div class="bar" style="flex: 1; max-width: 100px;">
+                  <div class="bar-fill bar-deps" style="width: ${(d.dependencies / maxDeps) * 100}%"></div>
+                </div>
+              </div>
+            </td>
+            <td>
+              <div style="display: flex; align-items: center; gap: 0.5rem;">
+                <span style="min-width: 2rem;">${d.dependents}</span>
+                <div class="bar" style="flex: 1; max-width: 100px;">
+                  <div class="bar-fill bar-dependents" style="width: ${(d.dependents / maxDependents) * 100}%"></div>
+                </div>
+              </div>
+            </td>
+            <td>${badges.join(' ') || '—'}</td>
+          </tr>
+        `;
+      }).join('');
+
+      renderPagination();
+    }
+
+    function renderPagination() {
+      const totalPages = Math.ceil(filteredData.length / pageSize);
+      const pagination = document.getElementById('pagination');
+
+      let buttons = [];
+      buttons.push(`<button ${currentPage === 1 ? 'disabled' : ''} onclick="goToPage(${currentPage - 1})">← Prev</button>`);
+
+      const pages = [];
+      if (totalPages <= 7) {
+        for (let i = 1; i <= totalPages; i++) pages.push(i);
+      } else {
+        pages.push(1);
+        if (currentPage > 3) pages.push('...');
+        for (let i = Math.max(2, currentPage - 1); i <= Math.min(totalPages - 1, currentPage + 1); i++) {
+          pages.push(i);
+        }
+        if (currentPage < totalPages - 2) pages.push('...');
+        pages.push(totalPages);
+      }
+
+      pages.forEach(p => {
+        if (p === '...') {
+          buttons.push('<span style="padding: 0.5rem;">...</span>');
+        } else {
+          buttons.push(`<button class="${p === currentPage ? 'active' : ''}" onclick="goToPage(${p})">${p}</button>`);
+        }
+      });
+
+      buttons.push(`<button ${currentPage === totalPages ? 'disabled' : ''} onclick="goToPage(${currentPage + 1})">Next →</button>`);
+
+      pagination.innerHTML = buttons.join('');
+
+      const start = (currentPage - 1) * pageSize + 1;
+      const end = Math.min(currentPage * pageSize, filteredData.length);
+      document.getElementById('page-info').textContent = `Showing ${start}-${end} of ${filteredData.length} sections`;
+    }
+
+    function goToPage(page) {
+      currentPage = page;
+      render();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function downloadCSV() {
+      const headers = ['order', 'section', 'citation_path', 'dependencies', 'dependents', 'scc_size'];
+      const rows = filteredData.map(d => headers.map(h => d[h]).join(','));
+      const csv = [headers.join(','), ...rows].join('\n');
+
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'encoding_sequence.csv';
+      a.click();
+    }
+
+    // Event listeners
+    document.getElementById('search').addEventListener('input', applyFilters);
+    document.getElementById('sort').addEventListener('change', (e) => {
+      sortColumn = e.target.value;
+      sortDirection = 'asc';
+      sortData();
+      render();
+    });
+    document.getElementById('filter').addEventListener('change', applyFilters);
+
+    document.querySelectorAll('th[data-sort]').forEach(th => {
+      th.addEventListener('click', () => {
+        const col = th.dataset.sort;
+        if (sortColumn === col) {
+          sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
+        } else {
+          sortColumn = col;
+          sortDirection = 'asc';
+        }
+        document.querySelectorAll('th').forEach(t => t.classList.remove('sorted-asc', 'sorted-desc'));
+        th.classList.add(sortDirection === 'asc' ? 'sorted-asc' : 'sorted-desc');
+        sortData();
+        render();
+      });
+    });
+
+    loadData();
+  </script>
+</body>
+</html>

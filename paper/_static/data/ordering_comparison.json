@@ -1,0 +1,26 @@
+{
+  "Optimal (topological)": {
+    "total_forward_refs": 1920,
+    "max_blocked": 90,
+    "avg_blocked": 0.7843137254901961,
+    "pct_zero_blocked": 81.37254901960785
+  },
+  "Numerical (\u00a71, \u00a72, ...)": {
+    "total_forward_refs": 2490,
+    "max_blocked": 108,
+    "avg_blocked": 1.017156862745098,
+    "pct_zero_blocked": 65.64542483660131
+  },
+  "Random": {
+    "total_forward_refs": 4490,
+    "max_blocked": 49,
+    "avg_blocked": 1.8341503267973855,
+    "pct_zero_blocked": 49.877450980392155
+  },
+  "Reverse optimal": {
+    "total_forward_refs": 6586,
+    "max_blocked": 39,
+    "avg_blocked": 2.690359477124183,
+    "pct_zero_blocked": 31.086601307189543
+  }
+}

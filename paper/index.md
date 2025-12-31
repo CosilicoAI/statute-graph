@@ -165,7 +165,27 @@ The optimal encoding sequence enables:
 2. **Incremental validation**: Each encoded section can be tested against its dependencies
 3. **Progress tracking**: The sequence provides a clear metric for encoding completion
 
-The first 10 sections to encode are foundational definitions and rate tables. The last sections to encode are highly specific provisions that depend on many others.
+```{figure} _static/figures/ordering_comparison.png
+:name: fig-ordering
+:width: 95%
+
+**Figure 6: Encoding Order Comparison.** Left: Cumulative forward references during encoding—optimal ordering (green) accumulates far fewer than numerical or random orderings. Right: Total forward references by strategy. The optimal topological ordering reduces forward references by 71% compared to the worst case (reverse optimal).
+```
+
+We define **forward references** as instances where a section references another section that has not yet been encoded. This metric captures the cost of encoding in suboptimal order: each forward reference requires placeholder logic that must be updated later.
+
+| Ordering Strategy | Forward Refs | % Clean Encodes |
+|-------------------|--------------|-----------------|
+| Optimal (topological) | 1,913 | 81.2% |
+| Numerical (§1, §2, ...) | 2,490 | 65.6% |
+| Random | 4,490 | 49.9% |
+| Reverse optimal | 6,593 | 31.2% |
+
+The optimal ordering achieves 81.2% "clean" encodes—sections where all dependencies are already encoded—compared to just 31.2% for the worst case.
+
+**[Explore the full encoding sequence interactively →](_static/explorer.html)**
+
+The interactive explorer allows searching, filtering by type (foundations, hubs, cycles), and downloading the complete sequence as CSV.
 
 ## Discussion
 
