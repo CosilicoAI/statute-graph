@@ -187,6 +187,31 @@ The optimal ordering achieves 81.2% "clean" encodes—sections where all depende
 
 The interactive explorer allows searching, filtering by type (foundations, hubs, cycles), and downloading the complete sequence as CSV.
 
+### Case Study: Individual Income Taxes (§§1–1400)
+
+For projects focused on a subset of the code, the optimal sequence should be recomputed on the induced subgraph. Filtering the full sequence would be incorrect because external dependencies disappear.
+
+We demonstrate this with Subtitle A (Individual Income Taxes, §§1–1400):
+
+| Metric | Full Title 26 | Subtitle A Only |
+|--------|---------------|-----------------|
+| Sections | 2,448 | 1,086 (44%) |
+| Internal cross-refs | 8,458 | 4,414 |
+| Graph density | 0.14% | 0.37% |
+
+The subgraph is denser because Subtitle A sections frequently reference each other. The top hubs within this subset are:
+
+- **§1** (tax rates): 365 dependents (vs 563 in full graph)
+- **§401** (pensions): 163 dependents
+- **§2** (tax tables): 154 dependents
+
+Critically, the optimal ordering for this subgraph achieves a 56% reduction in forward references compared to random ordering—different from the 71% reduction for the full graph. This reflects the distinct dependency structure within Subtitle A.
+
+```bash
+# Generate optimal sequence for Subtitle A
+statute-graph sequence usc26.xml --sections 1-1400 -o subtitle_a.json
+```
+
 ## Discussion
 
 ### Implications for Legal Technology
